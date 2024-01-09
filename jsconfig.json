@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "baseUrl": "src", //루트 폴더 url
+    },
+    //import시 해당 루트 포함 여부
+    //ex1. include에 src 포함 안할 시 import 'src/components/*'
+    //ex2. include에 src 포함시 import 'components/*'
+    "include": [
+        "src"
+    ]
+}
