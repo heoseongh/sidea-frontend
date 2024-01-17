@@ -105,5 +105,5 @@ jobs:
         script: |
           sudo docker rm -f $(sudo docker ps -al |grep ${{ env.DOCKER_IMAGE_NAME }} |awk '{print $1}')
           sudo docker pull ${{ env.DOCKER_IMAGE_NAME }}
-          sudo docker run --name ${{ env.DOCKER_CONTAINER_NAME }} -d -p 3001:3001 ${{ env.DOCKER_IMAGE_NAME }}:latest
+          sudo docker run --name ${{ env.DOCKER_CONTAINER_NAME }} -d -p 3001:3000 ${{ env.DOCKER_IMAGE_NAME }}:latest
           sudo docker image prune -f
