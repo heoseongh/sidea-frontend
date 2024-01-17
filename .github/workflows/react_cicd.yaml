@@ -47,7 +47,7 @@ jobs:
     # 도커이미지(Real) 빌드하고 허브에 업로드
     - name: Container Build and Push to DockerHub
       uses: docker/build-push-action@v2
-      if: ${{ success() }}
+      if: env.BRANCH == 'main'
       with:
           context: ./
           file: ./Dockerfile
@@ -56,6 +56,7 @@ jobs:
     # 도커이미지(Dev) 빌드하고 허브에 업로드
     - name: Container Build and Push to DockerHub
       uses: docker/build-push-action@v2
+      if: env.BRANCH == 'dev'
       with:
           context: ./
           file: ./Dockerfile.dev
