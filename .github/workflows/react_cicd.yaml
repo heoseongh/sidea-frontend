@@ -1,0 +1,112 @@
+name: CI/CD Java Project # Build Java Project -> Push DockerHub -> Deploy EC2
+on:
+  push:
+    branches: ['main', 'dev']
+    #tags: 'v*'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 환경변수 설정
+    - name: Set env
+      run: |
+        BRANCH=$(echo $GITHUB_REF | cut -d'/' -f 3)
+        echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+        echo DOCKER_IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.PROJECT_NAME }}-$BRANCH >> $GITHUB_ENV
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Move React code
+      run: |
+        mv ./* ./
+
+    - name: Setup React Build Environment
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org/'
+
+    - name: Install dependencies
+      run: yarn install
+
+    # 도커 허브 로그인 (real)
+    - name: DockerHub Login
+      uses: docker/login-action@v1
+      if: env.BRANCH == 'main'
+      with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN_REAL }}
+    # 도커 허브 로그인 (dev)
+    - name: DockerHub Login
+      uses: docker/login-action@v1
+      if: env.BRANCH == 'dev'
+      with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN_DEV }}
+
+    # 도커이미지(Real) 빌드하고 허브에 업로드
+    - name: Container Build and Push to DockerHub
+      uses: docker/build-push-action@v2
+      if: ${{ success() }}
+      with:
+          context: ./
+          file: ./Dockerfile
+          push: true
+          tags: ${{ env.DOCKER_IMAGE_NAME }}
+    # 도커이미지(Dev) 빌드하고 허브에 업로드
+    - name: Container Build and Push to DockerHub
+      uses: docker/build-push-action@v2
+      with:
+          context: ./
+          file: ./Dockerfile.dev
+          push: true
+          tags: ${{ env.DOCKER_IMAGE_NAME }}
+
+  # EC2에 배포
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    
+    # 환경변수 설정
+    - name: Set env
+      run: |
+        SERVER_TYPE=$(echo $GITHUB_REF | cut -d'/' -f 3)
+        echo "DOCKER_IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.PROJECT_NAME }}-$SERVER_TYPE" >> $GITHUB_ENV
+        echo "DOCKER_CONTAINER_NAME=${{ vars.PROJECT_NAME }}-$SERVER_TYPE" >> $GITHUB_ENV
+
+    # 운영 배포
+    - name: Deploy to Real
+      uses: appleboy/ssh-action@master
+      id: deploy-real
+      if: contains(github.ref, 'main')
+      with:
+        host: ${{ secrets.REMOTE_IP }}
+        username: ${{ secrets.REMOTE_SSH_ID }}
+        key: ${{ secrets.REMOTE_SSH_KEY }}
+        port: ${{ secrets.REMOTE_SSH_PORT }}
+        script: |
+          sudo docker rm -f $(sudo docker ps -al |grep ${{ env.DOCKER_IMAGE_NAME }} |awk '{print $1}')
+          sudo docker pull ${{ env.DOCKER_IMAGE_NAME }}
+          sudo docker run --name ${{ env.DOCKER_CONTAINER_NAME }} -d -p 3000:3000 ${{ env.DOCKER_IMAGE_NAME }}:latest
+          sudo docker image prune -f
+
+    # 개발 배포
+    - name: Deploy to Dev
+      uses: appleboy/ssh-action@master
+      id: deploy-dev
+      if: contains(github.ref, 'dev')
+      with:
+        host: ${{ secrets.REMOTE_IP }}
+        username: ${{ secrets.REMOTE_SSH_ID }}
+        key: ${{ secrets.REMOTE_SSH_KEY }}
+        port: ${{ secrets.REMOTE_SSH_PORT }}
+        script: |
+          sudo docker rm -f $(sudo docker ps -al |grep ${{ env.DOCKER_IMAGE_NAME }} |awk '{print $1}')
+          sudo docker pull ${{ env.DOCKER_IMAGE_NAME }}
+          sudo docker run --name ${{ env.DOCKER_CONTAINER_NAME }} -d -p 3001:3001 ${{ env.DOCKER_IMAGE_NAME }}:latest
+          sudo docker image prune -f
