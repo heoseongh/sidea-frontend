@@ -20,10 +20,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Move React code
-      run: |
-        mv ./* ./
-
     - name: Setup React Build Environment
       uses: actions/setup-node@v3
       with:
