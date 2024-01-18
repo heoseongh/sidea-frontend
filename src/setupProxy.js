@@ -2,9 +2,9 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function(app) {
   app.use(
-    '/hello',
+    '/dev',
     createProxyMiddleware({
-      target: 'http://172.17.0.4:8080',
+      target: 'http://sidea-backend-dev:8080',
       changeOrigin: true,
     })
   );
