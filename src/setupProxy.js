@@ -4,7 +4,7 @@ module.exports = function(app) {
   app.use(
     '/api',
     createProxyMiddleware({
-      target: 'http://sidea-backend-dev:8081',
+      target: 'http://sidea-backend-dev:8080',
       changeOrigin: true,
     })
   );
