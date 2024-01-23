@@ -50,7 +50,7 @@ jobs:
       if: env.BRANCH == 'main'
       with:
           context: ./
-          file: ./Dockerfile
+          file: ./Dockerfile.real
           push: true
           tags: ${{ env.DOCKER_IMAGE_NAME }}
     # 도커이미지(Dev) 빌드하고 허브에 업로드
