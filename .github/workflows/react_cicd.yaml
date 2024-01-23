@@ -20,6 +20,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    # 프로퍼티스 파일 주입
+    - name: Injection Properties File
+      run: |
+        echo "${{ vars.NGINX_CONFIG }}" > default.conf
+
     - name: Setup React Build Environment
       uses: actions/setup-node@v3
       with:
