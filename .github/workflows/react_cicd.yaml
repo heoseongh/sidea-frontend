@@ -20,8 +20,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    # 프로퍼티스 파일 주입
-    - name: Injection Properties File
+    # Nginx 설정 파일 주입
+    - name: Injection Nginx Configuration File
       run: |
         echo "${{ vars.NGINX_CONFIG }}" > default.conf
 
