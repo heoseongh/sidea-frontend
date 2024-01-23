@@ -94,7 +94,7 @@ jobs:
         script: |
           sudo docker rm -f $(sudo docker ps -a |grep ${{ env.DOCKER_CONTAINER_NAME }} |awk '{print $1}')
           sudo docker pull ${{ env.DOCKER_IMAGE_NAME }}
-          sudo docker run --name ${{ env.DOCKER_CONTAINER_NAME }} --rm -d --network real -p 3000:3000 ${{ env.DOCKER_IMAGE_NAME }}:latest
+          sudo docker run --name ${{ env.DOCKER_CONTAINER_NAME }} --rm -d --network real -p 80:80 ${{ env.DOCKER_IMAGE_NAME }}:latest
           sudo docker image prune -f
 
     # 개발 배포
